@@ -1,9 +1,11 @@
 package ru.geekbrains.server;
 
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 import ru.geekbrains.client.AuthException;
 import ru.geekbrains.client.TextMessage;
 import ru.geekbrains.server.auth.AuthService;
 import ru.geekbrains.server.auth.AuthServiceJdbcImpl;
+import ru.geekbrains.server.persistance.UserRepository;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -25,12 +27,16 @@ public class ChatServer {
     private Map<String, ClientHandler> clientHandlerMap = Collections.synchronizedMap(new HashMap<>());
 
     public static void main(String[] args) throws SQLException {
-        ChatServer chatServer = new ChatServer();
+        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("spring-context.xml")
+        ChatServer chatServer = context.getBean("chatServer", ChatServer.class);
         chatServer.start(7777);
+        AuthService authService = context.getBean("authServiceJdbcImpl", AuthServiceJdbcImpl.class);
+        UserRepository userRepository = context.getBean("userRepository", UserRepository.class);
     }
 
-    public ChatServer() throws SQLException {
-        this.authService = new AuthServiceJdbcImpl();
+
+    public ChatServer(AuthService authService) throws SQLException {
+        this.authService = authService;
     }
 
     private void start(int port) {
